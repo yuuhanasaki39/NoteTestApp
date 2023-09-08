@@ -1,5 +1,7 @@
 package com.github.yuuhanasaki39.note_test_app
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +17,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,40 +24,36 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditText(viewModel: EditTextViewModel) {
-    var inputText by remember { mutableStateOf("") }
-    val inputState by viewModel.textState.collectAsState("")
+    val inputState by viewModel.textState.collectAsState("hoge")
+
     var textEnabled by remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
-        delay(1000)
-        viewModel.textState.collect {
-            inputText = it
-        }
-    }
+    val focusRequester = remember { FocusRequester() }
 
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         Column {
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = {
-                    inputText = it
+            RealityTextField(
+                inputState = inputState,
+                focusRequester = focusRequester,
+                onValueChanged = {
                     viewModel.updateText(it)
                 },
-                enabled = textEnabled,
-                placeholder = { Text("Enter Text") },
-                trailingIcon = {
-                    TextFieldIcon(
-                        isTextEmpty = inputText.isEmpty(),
-                        onClickSend = { viewModel.updateText("") }
-                    )
-                },
-                shape = RoundedCornerShape(28.dp)
+                onClickSend = {
+                    viewModel.updateText("")
+                }
             )
 
             Button(onClick = { textEnabled = !textEnabled }) {
@@ -64,6 +61,48 @@ fun EditText(viewModel: EditTextViewModel) {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RealityTextField(
+    inputState: String,
+    focusRequester: FocusRequester,
+    onValueChanged: (String) -> Unit,
+    onClickSend: () -> Unit
+) {
+    var inputText by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = inputState,
+                selection = TextRange(inputState.length)
+            )
+        )
+    }
+    OutlinedTextField(
+        value = inputText,
+        onValueChange = {
+            inputText = it
+            onValueChanged(it.text)
+        },
+        placeholder = { Text("Enter Text") },
+        trailingIcon = {
+            TextFieldIcon(
+                isTextEmpty = inputText.text.isEmpty(),
+                onClickSend = onClickSend
+            )
+        },
+        shape = RoundedCornerShape(28.dp),
+        modifier = Modifier
+            .focusRequester(focusRequester)
+            .clickable {
+                focusRequester.requestFocus()
+                Log.d("HOGE:click","")
+                inputText = inputText.copy(selection = TextRange(4))
+            }
+    )
+    Log.d("HOGE:text", inputText.text)
+    Log.d("HOGE:selec", inputText.selection.toString())
 }
 
 @Composable

@@ -7,12 +7,11 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class EditTextViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
-    private val _textState = MutableStateFlow(savedStateHandle["key"] ?: "null")
+    private val _textState = MutableStateFlow("hoge")
     val textState = _textState.asStateFlow()
 
     // データの更新
     fun updateText(newText: String) {
-        savedStateHandle["key"] = newText
         _textState.value = newText
     }
 }
