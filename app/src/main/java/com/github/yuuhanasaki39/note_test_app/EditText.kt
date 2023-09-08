@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditText(viewModel: EditTextViewModel) {
-    val inputState by viewModel.textState.collectAsState("hoge")
+    val inputState by viewModel.textState.collectAsState("")
 
     var textEnabled by remember { mutableStateOf(true) }
 
@@ -46,19 +46,15 @@ fun EditText(viewModel: EditTextViewModel) {
     ) {
         Column {
             RealityTextField(
-                inputState = inputState,
+                inputText = inputState,
                 focusRequester = focusRequester,
                 onValueChanged = {
-                    viewModel.updateText(it)
+                    viewModel.updateText(inputState)
                 },
                 onClickSend = {
-                    viewModel.updateText("")
+                    viewModel.updateText(inputState)
                 }
             )
-
-            Button(onClick = { textEnabled = !textEnabled }) {
-
-            }
         }
     }
 }
@@ -66,43 +62,32 @@ fun EditText(viewModel: EditTextViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RealityTextField(
-    inputState: String,
+    inputText: String,
     focusRequester: FocusRequester,
     onValueChanged: (String) -> Unit,
     onClickSend: () -> Unit
 ) {
-    var inputText by remember {
+    var textFieldValue by remember {
         mutableStateOf(
-            TextFieldValue(
-                text = inputState,
-                selection = TextRange(inputState.length)
-            )
+            TextFieldValue(inputText, TextRange(inputText.length))
         )
     }
     OutlinedTextField(
-        value = inputText,
+        value = textFieldValue,
         onValueChange = {
-            inputText = it
+            textFieldValue = it
             onValueChanged(it.text)
         },
         placeholder = { Text("Enter Text") },
         trailingIcon = {
             TextFieldIcon(
-                isTextEmpty = inputText.text.isEmpty(),
+                isTextEmpty = textFieldValue.text.isEmpty(),
                 onClickSend = onClickSend
             )
         },
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier
-            .focusRequester(focusRequester)
-            .clickable {
-                focusRequester.requestFocus()
-                Log.d("HOGE:click","")
-                inputText = inputText.copy(selection = TextRange(4))
-            }
     )
-    Log.d("HOGE:text", inputText.text)
-    Log.d("HOGE:selec", inputText.selection.toString())
 }
 
 @Composable
